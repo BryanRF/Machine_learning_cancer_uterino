@@ -54,7 +54,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 CORS_ALLOWED_ORIGINS = [
-    'http://192.168.0.20:5000','http://localhost:3000', # Add the origin(s) you want to allow here
+    'http://192.168.0.20:8000','http://192.168.0.20:5000','http://localhost:3000', # Add the origin(s) you want to allow here
 ]
 
 ROOT_URLCONF = 'src.urls'
