@@ -42,11 +42,10 @@ class Resultado(models.Model):
 class MetricasDesempeno(models.Model):
     metrica_id = models.AutoField(primary_key=True)
     modelo = models.CharField(max_length=100)
-    precision = models.FloatField()
-    sensibilidad = models.FloatField()
-    especificidad = models.FloatField()
-    exactitud = models.FloatField()
-    ssim = models.FloatField(null=True)
+    precision = models.DecimalField(max_digits=5, decimal_places=3)
+    sensibilidad = models.DecimalField(max_digits=5, decimal_places=3)
+    especificidad = models.DecimalField(max_digits=5, decimal_places=3)
+    exactitud = models.DecimalField(max_digits=5, decimal_places=3)
     epocas = models.PositiveIntegerField()  
     algoritmo = models.ForeignKey('Algoritmo', on_delete=models.CASCADE)  
 
@@ -66,6 +65,12 @@ class Entrenamiento(models.Model):
     epocas = models.PositiveIntegerField()
     rutamodelo = models.CharField(max_length=255)
     fecha_entrenamiento = models.DateTimeField(auto_now_add=True)
-
+    def delete(self, *args, **kwargs):
+        # Eliminar el archivo asociado
+        ruta_completa = os.path.join("machine_learning", "entrenamiento", self.rutamodelo)
+        if os.path.exists(ruta_completa):
+            os.remove(ruta_completa)
+        
+        super().delete(*args, **kwargs)
     def __str__(self):
         return f"Entrenamiento del algoritmo {self.algoritmo.name} (Epocas: {self.epocas})"

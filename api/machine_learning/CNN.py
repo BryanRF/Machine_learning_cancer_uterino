@@ -10,6 +10,9 @@ from ..models import MetricasDesempeno, Algoritmo
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from skimage.metrics import structural_similarity as ssim
 import cv2
+import base64
+from tempfile import NamedTemporaryFile
+
 class CNN:
     def __init__(self):
         self.model = self.load_data()
@@ -103,15 +106,8 @@ class CNN:
     
 
 
-    def save_metrics(algoritmo, epochs, ground_truth, predicciones, imagen_referencia_path, imagen_prediccion_path):
-        # Calcular SSIM
-        imagen_referencia = cv2.imread(imagen_referencia_path, cv2.IMREAD_GRAYSCALE)
-        imagen_prediccion = cv2.imread(imagen_prediccion_path, cv2.IMREAD_GRAYSCALE)
+    def save_metrics(self,algoritmo, epochs,ground_truth, predicciones):
 
-        # Calcular el índice de similitud estructural (SSIM)
-        indice_ssim = ssim(imagen_referencia, imagen_prediccion)
-
-        # Calcular métricas de clasificación
         verdaderos_positivos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 1 and p == 1)
         falsos_positivos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 0 and p == 1)
         verdaderos_negativos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 0 and p == 0)
@@ -124,13 +120,13 @@ class CNN:
 
         # Guardar métricas en tu modelo MetricasDesempeno
         metricas = MetricasDesempeno(
-            modelo=algoritmo,
+            modelo=algoritmo.name,
             precision=precision,
             sensibilidad=sensibilidad,
             especificidad=especificidad,
             exactitud=exactitud,
             epocas=epochs,
-            ssim=indice_ssim  # Añade el valor SSIM
+            algoritmo=algoritmo,
         )
         metricas.save()
 
