@@ -6,13 +6,15 @@ from tensorflow import keras
 from keras.utils import to_categorical
 from ..models import TipoImagen
 import os
-from ..models import MetricasDesempeno, Algoritmo
+from ..models import MetricasDesempeno, Algoritmo,Resultado
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from skimage.metrics import structural_similarity as ssim
 import cv2
 import base64
 from tempfile import NamedTemporaryFile
-
+import io
+import uuid
+from PIL import Image as PILImage
 class CNN:
     def __init__(self):
         self.model = self.load_data()
@@ -106,7 +108,7 @@ class CNN:
     
 
 
-    def save_metrics(self,algoritmo, epochs,ground_truth, predicciones):
+    def save_metrics(self,algoritmo, epochs,ground_truth, predicciones,imagen_analizada,diagnostico):
 
         verdaderos_positivos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 1 and p == 1)
         falsos_positivos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 0 and p == 1)
@@ -117,8 +119,14 @@ class CNN:
         sensibilidad = verdaderos_positivos / (verdaderos_positivos + falsos_negativos)
         especificidad = verdaderos_negativos / (verdaderos_negativos + falsos_positivos)
         exactitud = (verdaderos_positivos + verdaderos_negativos) / len(ground_truth)
-
+        probabilidad = (precision * 0.2 + sensibilidad * 0.1 + especificidad * 0.2 + exactitud * 0.1+ (precision+especificidad) * 0.5) 
         # Guardar métricas en tu modelo MetricasDesempeno
+        unique_filename = f"{uuid.uuid4().hex}.bmp"
+        image_io = io.BytesIO(imagen_analizada)
+        image = PILImage.open(image_io)
+        image_path = os.path.join("analisis", unique_filename)  # Ruta donde se guardará la imagen
+        image.save(image_path, format='BMP')
+        
         metricas = MetricasDesempeno(
             modelo=algoritmo.name,
             precision=precision,
@@ -129,4 +137,14 @@ class CNN:
             algoritmo=algoritmo,
         )
         metricas.save()
+        print(type(imagen_analizada))
+        
+        resultado = Resultado(
+            probabilidad_cancer=probabilidad,
+            diagnostico=diagnostico,
+        )
+        resultado.imagen_analizada.name = image_path
+        resultado.save()
+        
+        return resultado
 

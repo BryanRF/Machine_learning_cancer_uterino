@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 import os
 import uuid
-
+from datetime import date
 
 def image_path(instance, filename):
     unique_filename = f"{uuid.uuid4().hex}{os.path.splitext(filename)[1]}"
@@ -10,6 +10,11 @@ def image_path(instance, filename):
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'media')
     data_dir= 'C:/BrayanHTEC/Machine_learning_cancer_uterino/media'
     return os.path.join(data_dir, slug, unique_filename)
+def image_path2(instance, filename):
+    unique_filename = f"{uuid.uuid4().hex}{os.path.splitext(filename)[1]}"
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'analisis')
+    data_dir= 'C:/BrayanHTEC/Machine_learning_cancer_uterino/analisis'
+    return os.path.join(data_dir, unique_filename)
 class Diagnostico(models.Model):
     diagnostico_id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
@@ -33,12 +38,7 @@ class Image(models.Model):
     image = models.ImageField(upload_to=image_path)
     def __str__(self):
         return f"{self.image} | Imagen de {self.tipo_imagen.nombre}"
-class Resultado(models.Model):
-    resultado_id = models.AutoField(primary_key=True)
-    probabilidad_cancer = models.FloatField()
-    diagnostico = models.ForeignKey(Diagnostico, on_delete=models.CASCADE)
-    def __str__(self):
-        return f"Diagnóstico: {self.diagnostico.nombre}"
+
 class MetricasDesempeno(models.Model):
     metrica_id = models.AutoField(primary_key=True)
     modelo = models.CharField(max_length=100)
@@ -51,6 +51,15 @@ class MetricasDesempeno(models.Model):
 
     def __str__(self):
         return f"Metricas del modelo {self.modelo}"
+class Resultado(models.Model):
+    resultado_id = models.AutoField(primary_key=True)
+    probabilidad_cancer = models.FloatField(default=0)
+    fecha = models.DateField(default=date.today)  # Campo de fecha
+    imagen_analizada = models.ImageField(upload_to=image_path2) # Campo de imagen
+    diagnostico = models.ForeignKey(Diagnostico, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Diagnóstico: {self.diagnostico.nombre}"
 class Algoritmo(models.Model):
     algoritmo_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)

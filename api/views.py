@@ -22,6 +22,10 @@ from django.utils import timezone
 from datetime import datetime
 from django.core.files import File
 import uuid
+from django.http import FileResponse
+from django.conf import settings
+import os
+from django.http import Http404
 
 class TipoImagenView(View):
 
@@ -129,22 +133,25 @@ class TipoImagenView(View):
         datos_encontrados = tipo_imagen.first()  # Corregido a 'tipo_imagen'
         cancer_image = Image.objects.filter(tipo_imagen=datos_encontrados).order_by('?').first()  # Corregido a 'tipo_imagen'
        
-
+        unique_filename = f"{uuid.uuid4().hex}.bmp"
         prediccion={}
         if tipo_imagen.exists():
             image_bytes = self.convertir_bytes(cancer_image.image.path)
 
             ground_truth = validation_generator_aux.labels
-
+            
             predictions = np.argmax(self.model.predict(validation_generator_aux), axis=1)
-            classifier.save_metrics(algoritmo, entrenamiento.epocas, ground_truth,predictions)
+            datos_resultados=classifier.save_metrics(algoritmo, entrenamiento.epocas, ground_truth,predictions,file_content,datos_encontrados.diagnostico)
                 
-            prediccion = {'prediccion': class_names[predicted_class], 
+            prediccion = {
+                        'prediccion': class_names[predicted_class], 
                         'estado': True,
                         'image_url': image_bytes,
                         'nombre': datos_encontrados.nombre, 
                         'diagnostico': datos_encontrados.diagnostico.nombre, 
                         'descripcion': datos_encontrados.diagnostico.descripcion,
+                        'es_benigno':datos_encontrados.diagnostico.es_benigno,
+                        'porcentaje':datos_resultados.probabilidad_cancer*100,
                         }
             
         else:
@@ -152,3 +159,14 @@ class TipoImagenView(View):
             return JsonResponse({'mensaje':'No se encontraron registros'}, safe=False)
         # Cambiado a minúsculas por convención
         return JsonResponse(prediccion, safe=False)
+    def serve_analisis(request, filename):
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        analisis_file_path = os.path.join(BASE_DIR, 'analisis', filename)
+        media_file_path = os.path.join(BASE_DIR, 'media', filename)
+        
+        if os.path.isfile(analisis_file_path):
+            return FileResponse(open(analisis_file_path, 'rb'))
+        elif os.path.isfile(media_file_path):
+            return FileResponse(open(media_file_path, 'rb'))
+        else:
+            raise Http404
