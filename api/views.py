@@ -38,7 +38,7 @@ class TipoImagenView(View):
 
     def put(self, request):
         data = json.loads(request.body.decode('utf-8'))
-        algoritmo = data.get('algoritmo')
+        algoritmo = data.get('algoritmo_id')
         self.epochs = int(data.get('epochs'))
         classifier = CNN()
 
