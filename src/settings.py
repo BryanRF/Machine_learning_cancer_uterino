@@ -15,7 +15,8 @@ SECRET_KEY = 'django-insecure-dc%!4ice06dkq3&(*@cuuuhgf(4mo%%8(#=x^6w%qga9!d!p*2
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['192.168.101.8','http://192.168.101.8:5000/','http://192.168.101.8:8000','http://192.168.101.8:5000/svm','http://192.168.101.8:5000/cnn']
+# 172.21.64.1
+ALLOWED_HOSTS = ['172.21.64.1','http://172.21.64.1:5000/','http://172.21.64.1:8000','http://172.21.64.1:5000/svm','http://172.21.64.1:5000/cnn']
 
 
 # Application definition
@@ -57,7 +58,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 CORS_ALLOWED_ORIGINS = [
-    'http://192.168.101.8:8000','http://192.168.101.8:5000','http://localhost:3000', # Add the origin(s) you want to allow here
+    'http://172.21.64.1:8000','http://172.21.64.1:5000','http://localhost:3000', # Add the origin(s) you want to allow here
 ]
 
 ROOT_URLCONF = 'src.urls'

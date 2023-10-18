@@ -78,9 +78,7 @@ class CNN:
             'val_loss': val_loss[epoch],
             'val_accuracy': val_accuracy[epoch]
         })
-
         return metricas
-            
         
     def save_model(self, model, filename):
         model.save(filename)
@@ -115,13 +113,13 @@ class CNN:
         algoritmo = Algoritmo.objects.get(abrebiatura=self.abrebiatura)
 
         metrics = MetricasDesempeno(
-            modelo='Modelo Clasificación ',  
+            modelo='Red Neuronal Convolucional',  
             precision=precision,
             sensibilidad=sensitivity,
             especificidad=specificity,
             exactitud=accuracy,
             algoritmo=algoritmo,
-            datos_entrenados=epochs
+            epocas=epochs
         )
         metrics.save()
 
@@ -141,6 +139,7 @@ class CNN:
         especificidad = verdaderos_negativos / (verdaderos_negativos + falsos_positivos)
         exactitud = (verdaderos_positivos + verdaderos_negativos) / len(ground_truth)
         probabilidad = (precision * 0.2 + sensibilidad * 0.1 + especificidad * 0.2 + exactitud * 0.1+ (precision+especificidad) * 0.5) 
+        # probabilidad = 2 * (precision * sensibilidad) / (precision + sensibilidad)
         # Guardar métricas en tu modelo MetricasDesempeno
         unique_filename = f"{uuid.uuid4().hex}.bmp"
         image_io = io.BytesIO(imagen_analizada)

@@ -5,6 +5,8 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm 
 import joblib
+from ..models import MetricasDesempeno, Algoritmo,Resultado,MetricasEntrenamiento
+from sklearn.metrics import precision_score, recall_score, f1_score
 class SVMClassifier:
     def __init__(self):
         self.abrebiatura = 'SVM'
@@ -36,17 +38,48 @@ class SVMClassifier:
         return X, y
 
     def entrenar_modelo(self,path):
-        if os.path.exists(self.model_path):
-            # Si el modelo ya está entrenado, no es necesario volver a entrenar
-            return
-
         X, y = self.cargar_datos()
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        for i in tqdm(range(100)):  
-            self.model.fit(X_train, y_train)
-        
+        if os.path.exists(self.model_path):
+            # Si el modelo ya está entrenado, no es necesario volver a entrenar
+            return X_test,y_test
+        self.model.fit(X_train, y_train)
         # Guardar el modelo entrenado
         joblib.dump(self.model, path)
+        return X_test,y_test
+    def calcular_exactitud(self, X_test, y_test):
+            if not os.path.exists(self.model_path):
+                print("El modelo no está entrenado. Por favor, entrena el modelo primero.")
+                return None
+
+            if not self.model:
+                print("No se pudo cargar el modelo. Por favor, verifica el archivo del modelo.")
+                return None
+            y_pred = self.model.predict(X_test)
+            # Calcular la exactitud
+            accuracy = self.model.score(X_test, y_test)
+            # Calcular precisión
+            precision = precision_score(y_test, y_pred, average='weighted')
+            # Calcular recall
+            recall = recall_score(y_test, y_pred, average='weighted')
+            # Calcular F1-score
+            f1 = f1_score(y_test, y_pred, average='weighted')
+            probabilidad = (precision * 0.2 + f1 * 0.1 + recall * 0.2 + accuracy * 0.1+ (precision+recall) * 0.5) 
+            
+            algoritmo = Algoritmo.objects.get(abrebiatura=self.abrebiatura)
+
+            metrics = MetricasDesempeno(
+                modelo='Maquinas de Soporte Vectorial',  
+                precision=precision,
+                sensibilidad=f1,
+                especificidad=recall,
+                exactitud=accuracy,
+                algoritmo=algoritmo,
+                epocas=0
+            )
+            metrics.save()
+            
+            return probabilidad  
         
     def predecir_clase(self, test_image_path):
         test_img = cv2.imread(test_image_path, cv2.IMREAD_GRAYSCALE)
@@ -55,7 +88,8 @@ class SVMClassifier:
         predicted_class = self.model.predict(test_X)[0]
         return predicted_class
 
-    def guardar_imagen_prueba(self, imagen):
-        with open('analisis/test_image.bmp', 'wb') as f:
-            for chunk in imagen.chunks():
-                f.write(chunk)
+    def eliminar_modelo(self, path):
+        if os.path.exists(path):
+            os.remove(path)
+            return True
+        return False

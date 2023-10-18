@@ -51,8 +51,7 @@ class cnn_view(View):
         classifier = CNN()
         train_generator, validation_generator = classifier.load_data()
         self.model = classifier.create_model(input_shape=(150, 150, 3))
-        classifier.train_model(self.model, train_generator,
-                               validation_generator, self.epochs)
+        
         classifier.save_model(self.model, self.file_cnn)
         # Ahora guardamos la información en la tabla Entrenamiento
         entrenamiento = Entrenamiento(
@@ -62,8 +61,8 @@ class cnn_view(View):
             fecha_entrenamiento=timezone.now()  # Fecha actual
         )
         entrenamiento.save()
-
-        return JsonResponse({'mensaje': 'Modelo entrenado correctamente'}, safe=False)
+        metricas= classifier.train_model(self.model, train_generator,validation_generator, self.epochs,entrenamiento)
+        return JsonResponse({'mensaje': 'Modelo entrenado correctamente','metricas':metricas}, safe=False)
 
     def get(self, request):
         # Consulta todas las eTipoImagen en la base de datos
@@ -158,6 +157,7 @@ class cnn_view(View):
             return JsonResponse({'mensaje':'No se encontraron registros'}, safe=False)
         # Cambiado a minúsculas por convención
         return JsonResponse(prediccion, safe=False)
+    
     def serve_analisis(request, filename):
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         analisis_file_path = os.path.join(BASE_DIR, 'analisis', filename)
@@ -177,7 +177,6 @@ class svm_view(View):
         super().__init__()
         self.train_generator = None  # Inicializa train_generator como None en el constructor
         self.model = None  # Inicializa model como None en el constructor
-        now = datetime.now()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.rd_name = f"SVM.joblib"
         self.file_name = os.path.join(current_dir,"machine_learning","entrenamiento",  self.rd_name)
@@ -200,7 +199,7 @@ class svm_view(View):
 
         if imagen_binaria:
             # Entrenar el modelo si es la primera vez
-            classifier.entrenar_modelo(self.file_name)
+            X_test,y_test=classifier.entrenar_modelo(self.file_name)
             
             # Convertir los datos binarios a una imagen (esto supone que es un archivo de imagen)
             nparr = np.fromstring(imagen_binaria, np.uint8)
@@ -221,7 +220,7 @@ class svm_view(View):
             cancer_image = Image.objects.filter(tipo_imagen=datos_encontrados).order_by('?').first()  # Corregido a 'tipo_imagen'
         
             unique_filename = f"{uuid.uuid4().hex}.bmp"
-            response_data = {'nombre': predicted_class ,'estado': True,}
+         
             prediccion={}
             if tipo_imagen.exists():
                 image_bytes = self.convertir_bytes(cancer_image.image.path)
@@ -238,30 +237,30 @@ class svm_view(View):
                             'diagnostico': datos_encontrados.diagnostico.nombre, 
                             'descripcion': datos_encontrados.diagnostico.descripcion,
                             'es_benigno':datos_encontrados.diagnostico.es_benigno,
-                            # 'porcentaje':datos_resultados.probabilidad_cancer*100,
-                            'porcentaje':0.9787,
+                            'porcentaje':classifier.calcular_exactitud(X_test,y_test)*100,
                             }
             return JsonResponse(prediccion)
         else:
             return JsonResponse({'error': 'No se ha enviado ninguna imagen.'})
+    
+    def put(self, request):
+        data = json.loads(request.body.decode('utf-8'))
+        algoritmo_id = int(data.get('algoritmo_id'))
+        classifier = SVMClassifier()
 
-    # def put(self, request):
-    #     data = json.loads(request.body.decode('utf-8'))
-    #     algoritmo_id = int(data.get('algoritmo_id'))
+        # Eliminar el archivo del modelo
+        classifier.eliminar_modelo(self.file_name)
 
-    #     classifier = CNN()
-    #     train_generator, validation_generator = classifier.load_data()
-    #     self.model = classifier.create_model(input_shape=(150, 150, 3))
-    #     classifier.train_model(self.model, train_generator,
-    #                            validation_generator, self.epochs)
-    #     classifier.save_model(self.model, self.file_cnn)
-    #     # Ahora guardamos la información en la tabla Entrenamiento
-    #     entrenamiento = Entrenamiento(
-    #         algoritmo=Algoritmo.objects.get(pk=algoritmo_id),
-    #         epocas=self.epochs,
-    #         rutamodelo=self.cnn_name,
-    #         fecha_entrenamiento=timezone.now()  # Fecha actual
-    #     )
-    #     entrenamiento.save()
+        # Entrenar el modelo nuevamente
+        classifier.entrenar_modelo(self.file_name)
 
-    #     return JsonResponse({'mensaje': 'Modelo entrenado correctamente'}, safe=False)
+        entrenamiento = Entrenamiento(
+            algoritmo=Algoritmo.objects.get(pk=algoritmo_id),
+            epocas=0,
+            rutamodelo=self.file_name,
+            fecha_entrenamiento=timezone.now()  # Fecha actual
+        )
+        entrenamiento.save()
+
+        return JsonResponse({'mensaje': 'Modelo entrenado correctamente'}, safe=False)
+    
