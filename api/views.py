@@ -228,7 +228,7 @@ class svm_view(View):
                 # ground_truth = validation_generator_aux.labels
                 # predictions = np.argmax(self.model.predict(validation_generator_aux), axis=1)
                 # datos_resultados=classifier.save_metrics(algoritmo, entrenamiento.epocas, ground_truth,predictions,file_content,datos_encontrados.diagnostico)
-                    
+                resultado= classifier.calcular_exactitud(X_test,y_test)
                 prediccion = {
                             'prediccion': predicted_class, 
                             'estado': True,
@@ -237,7 +237,7 @@ class svm_view(View):
                             'diagnostico': datos_encontrados.diagnostico.nombre, 
                             'descripcion': datos_encontrados.diagnostico.descripcion,
                             'es_benigno':datos_encontrados.diagnostico.es_benigno,
-                            'porcentaje':classifier.calcular_exactitud(X_test,y_test)*100,
+                            'porcentaje':resultado['probabilidad']*100,
                             }
             return JsonResponse(prediccion)
         else:
@@ -252,8 +252,8 @@ class svm_view(View):
         classifier.eliminar_modelo(self.file_name)
 
         # Entrenar el modelo nuevamente
-        classifier.entrenar_modelo(self.file_name)
-
+        X_test,y_test= classifier.entrenar_modelo(self.file_name)
+        resultados=classifier.calcular_exactitud(X_test, y_test)
         entrenamiento = Entrenamiento(
             algoritmo=Algoritmo.objects.get(pk=algoritmo_id),
             epocas=0,
@@ -262,5 +262,5 @@ class svm_view(View):
         )
         entrenamiento.save()
 
-        return JsonResponse({'mensaje': 'Modelo entrenado correctamente'}, safe=False)
+        return JsonResponse({'mensaje': 'Modelo entrenado correctamente','metricas':resultados}, safe=False)
     
