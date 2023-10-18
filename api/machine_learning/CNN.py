@@ -1,17 +1,12 @@
 import numpy as np
 from tensorflow import keras
 from keras.preprocessing.image import ImageDataGenerator
-from PIL import Image
 from tensorflow import keras
 from keras.utils import to_categorical
 from ..models import TipoImagen
 import os
-from ..models import MetricasDesempeno, Algoritmo,Resultado
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from skimage.metrics import structural_similarity as ssim
-import cv2
-import base64
-from tempfile import NamedTemporaryFile
+from ..models import MetricasDesempeno, Algoritmo,Resultado,MetricasEntrenamiento
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 import io
 import uuid
 from PIL import Image as PILImage
@@ -22,7 +17,7 @@ class CNN:
 
     def load_data(self, img_width=150, img_height=150, batch_size=32, validation_split=0.2):
         train_datagen = ImageDataGenerator(rescale=1.0/255, validation_split=validation_split)
-        data_dir = 'C:/BrayanHTEC/Machine_learning_cancer_uterino/media'
+        data_dir =  os.path.join("media")
         train_generator = train_datagen.flow_from_directory(
             data_dir,
             target_size=(img_width, img_height),
@@ -58,9 +53,35 @@ class CNN:
         return model
 
 
-    def train_model(self, model, train_generator, validation_generator, epochs=20):
-        model.fit(train_generator, validation_data=validation_generator, steps_per_epoch=len(train_generator), validation_steps=len(validation_generator), epochs=epochs)
+    def train_model(self, model, train_generator, validation_generator, epochs, entrenamiento):
+        history = model.fit(train_generator, validation_data=validation_generator, steps_per_epoch=len(train_generator), validation_steps=len(validation_generator), epochs=epochs)
+        loss = history.history['loss']  # Lista de pérdida en cada época
+        accuracy = history.history['accuracy']  # Lista de precisión en cada época
+        val_loss = history.history['val_loss']  # Lista de pérdida de validación en cada época
+        val_accuracy = history.history['val_accuracy']
+        metricas = []
+        for epoch in range(epochs):
+            # Guardar los datos en la base de datos
+            metrica = MetricasEntrenamiento(
+                epoch=epoch + 1,  # Epoch comienza desde 1
+                loss=loss[epoch],
+                accuracy=accuracy[epoch],
+                val_loss=val_loss[epoch],
+                val_accuracy=val_accuracy[epoch],
+                entrenamiento=entrenamiento
+            )
+            metrica.save()
+            metricas.append({
+            'epoch': epoch + 1,
+            'loss': loss[epoch],
+            'accuracy': accuracy[epoch],
+            'val_loss': val_loss[epoch],
+            'val_accuracy': val_accuracy[epoch]
+        })
 
+        return metricas
+            
+        
     def save_model(self, model, filename):
         model.save(filename)
 

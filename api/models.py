@@ -8,12 +8,12 @@ def image_path(instance, filename):
     unique_filename = f"{uuid.uuid4().hex}{os.path.splitext(filename)[1]}"
     slug = slugify(instance.tipo_imagen.nombre)
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'media')
-    data_dir= 'C:/BrayanHTEC/Machine_learning_cancer_uterino/media'
+    data_dir= os.path.join("media")
     return os.path.join(data_dir, slug, unique_filename)
 def image_path2(instance, filename):
     unique_filename = f"{uuid.uuid4().hex}{os.path.splitext(filename)[1]}"
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'analisis')
-    data_dir= 'C:/BrayanHTEC/Machine_learning_cancer_uterino/analisis'
+    data_dir= os.path.join("analisis")
     return os.path.join(data_dir, unique_filename)
 class Diagnostico(models.Model):
     diagnostico_id = models.AutoField(primary_key=True)
@@ -83,3 +83,14 @@ class Entrenamiento(models.Model):
         super().delete(*args, **kwargs)
     def __str__(self):
         return f"Entrenamiento del algoritmo {self.algoritmo.name} (Epocas: {self.epocas})"
+
+class MetricasEntrenamiento(models.Model):
+    epoch = models.IntegerField()
+    loss = models.FloatField()
+    accuracy = models.FloatField()
+    val_loss = models.FloatField()
+    val_accuracy = models.FloatField()
+    entrenamiento = models.ForeignKey(Entrenamiento, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'Época {self.epoch} - Pérdida: {self.loss}, Precisión: {self.accuracy}, Pérdida de Validación: {self.val_loss}, Precisión de Validación: {self.val_accuracy}'
