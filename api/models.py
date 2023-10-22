@@ -76,7 +76,8 @@ class Entrenamiento(models.Model):
     fecha_entrenamiento = models.DateTimeField(auto_now_add=True)
     def delete(self, *args, **kwargs):
         # Eliminar el archivo asociado
-        ruta_completa = os.path.join("machine_learning", "entrenamiento", self.rutamodelo)
+        ruta_completa = os.path.join("api","machine_learning", "entrenamiento", self.rutamodelo)
+        print ('models: '+self.file_name)
         if os.path.exists(ruta_completa):
             os.remove(ruta_completa)
         
