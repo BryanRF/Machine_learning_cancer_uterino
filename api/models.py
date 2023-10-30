@@ -2,14 +2,19 @@ from django.db import models
 from django.utils.text import slugify
 import os
 import uuid
-
+from datetime import date
 
 def image_path(instance, filename):
     unique_filename = f"{uuid.uuid4().hex}{os.path.splitext(filename)[1]}"
     slug = slugify(instance.tipo_imagen.nombre)
     data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'media')
-    data_dir= 'C:/BrayanHTEC/Machine_learning_cancer_uterino/media'
+    data_dir= os.path.join("media")
     return os.path.join(data_dir, slug, unique_filename)
+def image_path2(instance, filename):
+    unique_filename = f"{uuid.uuid4().hex}{os.path.splitext(filename)[1]}"
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'analisis')
+    data_dir= os.path.join("analisis")
+    return os.path.join(data_dir, unique_filename)
 class Diagnostico(models.Model):
     diagnostico_id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
@@ -33,25 +38,28 @@ class Image(models.Model):
     image = models.ImageField(upload_to=image_path)
     def __str__(self):
         return f"{self.image} | Imagen de {self.tipo_imagen.nombre}"
-class Resultado(models.Model):
-    resultado_id = models.AutoField(primary_key=True)
-    probabilidad_cancer = models.FloatField()
-    diagnostico = models.ForeignKey(Diagnostico, on_delete=models.CASCADE)
-    def __str__(self):
-        return f"Diagnóstico: {self.diagnostico.nombre}"
+
 class MetricasDesempeno(models.Model):
     metrica_id = models.AutoField(primary_key=True)
     modelo = models.CharField(max_length=100)
-    precision = models.FloatField()
-    sensibilidad = models.FloatField()
-    especificidad = models.FloatField()
-    exactitud = models.FloatField()
-    ssim = models.FloatField(null=True)
+    precision = models.DecimalField(max_digits=5, decimal_places=3)
+    sensibilidad = models.DecimalField(max_digits=5, decimal_places=3)
+    especificidad = models.DecimalField(max_digits=5, decimal_places=3)
+    exactitud = models.DecimalField(max_digits=5, decimal_places=3)
     epocas = models.PositiveIntegerField()  
     algoritmo = models.ForeignKey('Algoritmo', on_delete=models.CASCADE)  
 
     def __str__(self):
         return f"Metricas del modelo {self.modelo}"
+class Resultado(models.Model):
+    resultado_id = models.AutoField(primary_key=True)
+    probabilidad_cancer = models.FloatField(default=0)
+    fecha = models.DateField(default=date.today)  # Campo de fecha
+    imagen_analizada = models.ImageField(upload_to=image_path2) # Campo de imagen
+    diagnostico = models.ForeignKey(Diagnostico, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Diagnóstico: {self.diagnostico.nombre}"
 class Algoritmo(models.Model):
     algoritmo_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -66,6 +74,23 @@ class Entrenamiento(models.Model):
     epocas = models.PositiveIntegerField()
     rutamodelo = models.CharField(max_length=255)
     fecha_entrenamiento = models.DateTimeField(auto_now_add=True)
-
+    def delete(self, *args, **kwargs):
+        # Eliminar el archivo asociado
+        ruta_completa = os.path.join("machine_learning", "entrenamiento", self.rutamodelo)
+        if os.path.exists(ruta_completa):
+            os.remove(ruta_completa)
+        
+        super().delete(*args, **kwargs)
     def __str__(self):
         return f"Entrenamiento del algoritmo {self.algoritmo.name} (Epocas: {self.epocas})"
+
+class MetricasEntrenamiento(models.Model):
+    epoch = models.IntegerField()
+    loss = models.FloatField()
+    accuracy = models.FloatField()
+    val_loss = models.FloatField()
+    val_accuracy = models.FloatField()
+    entrenamiento = models.ForeignKey(Entrenamiento, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'Época {self.epoch} - Pérdida: {self.loss}, Precisión: {self.accuracy}, Pérdida de Validación: {self.val_loss}, Precisión de Validación: {self.val_accuracy}'

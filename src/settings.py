@@ -1,9 +1,12 @@
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'analisis'),  # Ruta a tu carpeta 'analisis'
+    os.path.join(BASE_DIR, 'media'),  # Ruta a tu carpeta 'media'
+]
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -12,7 +15,8 @@ SECRET_KEY = 'django-insecure-dc%!4ice06dkq3&(*@cuuuhgf(4mo%%8(#=x^6w%qga9!d!p*2
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['192.168.0.20','http://192.168.0.20:5000/']
+# 172.21.64.1
+ALLOWED_HOSTS = ['172.21.64.1','http://172.21.64.1:5000/','http://172.21.64.1:8000','http://172.21.64.1:5000/svm','http://172.21.64.1:5000/cnn']
 
 
 # Application definition
@@ -54,7 +58,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 CORS_ALLOWED_ORIGINS = [
-    'http://192.168.0.20:8000','http://192.168.0.20:5000','http://localhost:3000', # Add the origin(s) you want to allow here
+    'http://172.21.64.1:8000','http://172.21.64.1:5000','http://localhost:3000', # Add the origin(s) you want to allow here
 ]
 
 ROOT_URLCONF = 'src.urls'
