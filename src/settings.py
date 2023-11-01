@@ -7,6 +7,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'analisis'),  # Ruta a tu carpeta 'analisis'
     os.path.join(BASE_DIR, 'media'),  # Ruta a tu carpeta 'media'
 ]
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 

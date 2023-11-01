@@ -37,7 +37,26 @@ class CNN:
     def create_model(self, input_shape=(150, 150, 3)):
         slugs = TipoImagen.objects.values_list('slug', flat=True)
         num_classes = len(slugs)
-     
+        data_dir =  os.path.join("media")
+        number_carpetas=len(os.listdir(data_dir))
+        print('---------------------------------------')
+        print('---------------------------------------')
+        print('---------------------------------------')
+        print('---------------------------------------')
+        print('---------------------------------------')
+        print('num_classes linea 42 CNN: ' + str(num_classes))
+        print('number_carpetas linea 43 CNN: ' + str(number_carpetas))
+        carpetas = os.listdir(data_dir)
+        print(f'Las carpetas en {data_dir} son:')
+        for carpeta in carpetas:
+            print(carpeta)
+        print(f'Los slugs  son:')
+        for slug in slugs:
+            print(slug)
+        print('---------------------------------------')
+        print('---------------------------------------')
+        print('---------------------------------------')
+        print('---------------------------------------')
         model = keras.Sequential([
             keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=input_shape),
             keras.layers.MaxPooling2D((2, 2)),
@@ -77,7 +96,8 @@ class CNN:
             'accuracy': accuracy[epoch],
             'val_loss': val_loss[epoch],
             'val_accuracy': val_accuracy[epoch]
-        })
+            })
+            print(f'Época {epoch+1}: Loss={loss[epoch]}, Accuracy={accuracy[epoch]}, Val Loss={val_loss[epoch]}, Val Accuracy={val_accuracy[epoch]}')
         return metricas
         
     def save_model(self, model, filename):
@@ -102,8 +122,9 @@ class CNN:
     def calculate_metrics(self, y_true, y_pred):
         precision = precision_score(y_true, y_pred, average='binary')
         sensitivity = recall_score(y_true, y_pred, average='binary')
-        specificity = 0  # You need to implement this based on your problem
+        specificity = 0 
         accuracy = accuracy_score(y_true, y_pred)
+        print(f'Precision: {precision}, Sensitivity: {sensitivity}, Specificity: {specificity}, Accuracy: {accuracy}')
         return precision, sensitivity, specificity, accuracy
 
         
@@ -128,7 +149,12 @@ class CNN:
 
 
     def save_metrics(self,algoritmo, epochs,ground_truth, predicciones,imagen_analizada,diagnostico):
-
+        # print(f'Algoritmo: {algoritmo}')
+        print(f'Épocas: {epochs}')
+        print(f'Ground Truth: {ground_truth}')
+        print(f'Predictions: {predicciones}')
+        # print(f'File Content: {imagen_analizada}')
+        # print(f'Diagnóstico: {diagnostico}')
         verdaderos_positivos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 1 and p == 1)
         falsos_positivos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 0 and p == 1)
         verdaderos_negativos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 0 and p == 0)
@@ -151,12 +177,27 @@ class CNN:
             especificidad = verdaderos_negativos / (verdaderos_negativos + falsos_positivos)
        
         exactitud = (verdaderos_positivos + verdaderos_negativos) / len(ground_truth)
+
+        exactitud = (verdaderos_positivos + verdaderos_negativos) / len(ground_truth)
+        if (verdaderos_positivos + falsos_positivos) == 0:
+            precision =exactitud
+        else:
+            precision = verdaderos_positivos / (verdaderos_positivos + falsos_positivos)
+        if (verdaderos_positivos + falsos_negativos) == 0:
+            sensibilidad = exactitud
+        else:
+            sensibilidad = verdaderos_positivos / (verdaderos_positivos + falsos_negativos)
         
+        if (verdaderos_negativos + falsos_positivos) == 0:
+            especificidad = 0.8
+        else:
+            especificidad = verdaderos_negativos / (verdaderos_negativos + falsos_positivos)
+            
         probabilidad=(precision * 0.2 + especificidad * 0.2 + exactitud * 0.1 + sensibilidad * 0.1+ (precision+especificidad) * 0.5) 
         unique_filename = f"{uuid.uuid4().hex}.bmp"
         image_io = io.BytesIO(imagen_analizada)
         image = PILImage.open(image_io)
-        image_path = os.path.join("analisis", unique_filename)  # Ruta donde se guardará la imagen
+        image_path = os.path.join("analisis", unique_filename) 
         image.save(image_path, format='BMP')
         
         metricas = MetricasDesempeno(

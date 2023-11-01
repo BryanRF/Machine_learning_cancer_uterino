@@ -37,9 +37,8 @@ class cnn_view(View):
         self.epochs = 1
         now = datetime.now()
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        self.cnn_name = f"CNN_{now.strftime('%Y%m%d%H%M%S')}.h5"
+        self.cnn_name = f"CNN_{now.strftime('%Y%m%d%H%M%S')}.keras"
         self.file_cnn = os.path.join(current_dir,"machine_learning","entrenamiento", self.cnn_name)
-
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args: Any, **kwargs: Any):
         return super().dispatch(request, *args, **kwargs)
@@ -131,7 +130,7 @@ class cnn_view(View):
         datos_encontrados = tipo_imagen.first()  # Corregido a 'tipo_imagen'
         cancer_image = Image.objects.filter(tipo_imagen=datos_encontrados).order_by('?').first()  # Corregido a 'tipo_imagen'
        
-        unique_filename = f"{uuid.uuid4().hex}.bmp"
+        # unique_filename = f"{uuid.uuid4().hex}.bmp"
         prediccion={}
         if tipo_imagen.exists():
             image_bytes = self.convertir_bytes(cancer_image.image.path)
@@ -139,8 +138,9 @@ class cnn_view(View):
             ground_truth = validation_generator_aux.labels
             
             predictions = np.argmax(self.model.predict(validation_generator_aux), axis=1)
+          
             datos_resultados=classifier.save_metrics(algoritmo, entrenamiento.epocas, ground_truth,predictions,file_content,datos_encontrados.diagnostico)
-                
+            
             prediccion = {
                         'prediccion': class_names[predicted_class], 
                         'estado': True,
@@ -180,6 +180,7 @@ class svm_view(View):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.rd_name = f"SVM.joblib"
         self.file_name = os.path.join(current_dir,"machine_learning","entrenamiento",  self.rd_name)
+        print ('svm_view linea 182: '+self.file_name)
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args: Any, **kwargs: Any):
         return super().dispatch(request, *args, **kwargs)
@@ -225,9 +226,6 @@ class svm_view(View):
             if tipo_imagen.exists():
                 image_bytes = self.convertir_bytes(cancer_image.image.path)
 
-                # ground_truth = validation_generator_aux.labels
-                # predictions = np.argmax(self.model.predict(validation_generator_aux), axis=1)
-                # datos_resultados=classifier.save_metrics(algoritmo, entrenamiento.epocas, ground_truth,predictions,file_content,datos_encontrados.diagnostico)
                 resultado= classifier.calcular_exactitud(X_test,y_test)
                 prediccion = {
                             'prediccion': predicted_class, 

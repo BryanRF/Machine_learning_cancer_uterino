@@ -13,10 +13,11 @@ import random
 class SVMClassifier:
     def __init__(self):
         self.abrebiatura = 'SVM'
-        # self.model_path = Path("machine_learning", "entrenamiento", f"SVM.joblib")
+        
         current_dir = os.path.dirname(os.path.abspath(__file__))
         self.rd_name = f"SVM.joblib"
         self.model_path = os.path.join(current_dir,"entrenamiento",  self.rd_name)
+        print ('18 SVMClassifier : '+self.model_path)
         if os.path.exists(self.model_path):
             # Si el modelo ya existe, cargarlo
             self.model = joblib.load(self.model_path)
@@ -26,8 +27,8 @@ class SVMClassifier:
             self.model = SVC(kernel='linear', probability=True)
 
     def cargar_datos(self):
-        X = []
-        y = []
+        X = []# IMAGEN
+        y = []# ETIQUETA
 
         for clase in os.listdir("media"):  # Agregamos tqdm aquí
             clase_path = os.path.join("media", clase)
@@ -59,6 +60,7 @@ class SVMClassifier:
                 print("No se pudo cargar el modelo. Por favor, verifica el archivo del modelo.")
                 return None
             y_pred = self.model.predict(X_test)
+            print(y_pred)
             # Calcular la exactitud
             accuracy = self.model.score(X_test, y_test)
             # Calcular precisión

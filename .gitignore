@@ -1,4 +1,7 @@
 venv/
-media/
+media/imagen-dyskeratotic/
+media/imagen-koilocytotic/
+media/imagen-metaplastic/
+media/test/
 analisis/
 api/machine_learning/entrenamiento/
