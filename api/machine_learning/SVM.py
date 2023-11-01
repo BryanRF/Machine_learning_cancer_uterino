@@ -1,13 +1,15 @@
 import os
-import cv2
+import cv2 #para reconocer imágenes
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
-from tqdm import tqdm 
+
 import joblib
 from ..models import MetricasDesempeno, Algoritmo,Resultado,MetricasEntrenamiento
 from sklearn.metrics import precision_score, recall_score, f1_score
 import random
+# imagen-dyskeratotic imagen-koilocytotic imagen-dyskeratotic
+
 class SVMClassifier:
     def __init__(self):
         self.abrebiatura = 'SVM'
@@ -27,7 +29,7 @@ class SVMClassifier:
         X = []
         y = []
 
-        for clase in tqdm(os.listdir("media")):  # Agregamos tqdm aquí
+        for clase in os.listdir("media"):  # Agregamos tqdm aquí
             clase_path = os.path.join("media", clase)
             for imagen in os.listdir(clase_path):
                 imagen_path = os.path.join(clase_path, imagen)

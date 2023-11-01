@@ -11,7 +11,7 @@ import io
 import uuid
 from PIL import Image as PILImage
 class CNN:
-    def __init__(self):
+    def _init_(self):
         self.model = self.load_data()
         self.abrebiatura= 'CNN'
 
@@ -133,14 +133,26 @@ class CNN:
         falsos_positivos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 0 and p == 1)
         verdaderos_negativos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 0 and p == 0)
         falsos_negativos = sum(1 for v, p in zip(ground_truth, predicciones) if v == 1 and p == 0)
-
-        precision = verdaderos_positivos / (verdaderos_positivos + falsos_positivos)
-        sensibilidad = verdaderos_positivos / (verdaderos_positivos + falsos_negativos)
-        especificidad = verdaderos_negativos / (verdaderos_negativos + falsos_positivos)
+        precision=0
+        sensibilidad = 0
+        especificidad = 0
+        if (verdaderos_positivos + falsos_positivos) == 0:
+            precision = 0
+        else:
+            precision = verdaderos_positivos / (verdaderos_positivos + falsos_positivos)
+        if (verdaderos_positivos + falsos_negativos) == 0:
+            sensibilidad = 0
+        else:
+            sensibilidad = verdaderos_positivos / (verdaderos_positivos + falsos_negativos)
+        
+        if (verdaderos_negativos + falsos_positivos) == 0:
+            especificidad = 0
+        else:
+            especificidad = verdaderos_negativos / (verdaderos_negativos + falsos_positivos)
+       
         exactitud = (verdaderos_positivos + verdaderos_negativos) / len(ground_truth)
-        probabilidad = (precision * 0.2 + sensibilidad * 0.1 + especificidad * 0.2 + exactitud * 0.1+ (precision+especificidad) * 0.5) 
-        # probabilidad = 2 * (precision * sensibilidad) / (precision + sensibilidad)
-        # Guardar métricas en tu modelo MetricasDesempeno
+        
+        probabilidad=(precision * 0.2 + especificidad * 0.2 + exactitud * 0.1 + sensibilidad * 0.1+ (precision+especificidad) * 0.5) 
         unique_filename = f"{uuid.uuid4().hex}.bmp"
         image_io = io.BytesIO(imagen_analizada)
         image = PILImage.open(image_io)
@@ -167,4 +179,3 @@ class CNN:
         resultado.save()
         
         return resultado
-
